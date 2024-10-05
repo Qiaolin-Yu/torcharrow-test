@@ -68,7 +68,46 @@ def test_log(batch_sizes, rounds=5):
                       yaxis_title='Average Processing Time (milliseconds)')
     fig.write_image('log_performance.png')
 
+
+def test_continuous(batch_sizes, rounds=5):
+    continuous_times = []
+    for batch_size in batch_sizes:
+        times = []
+        for _ in range(rounds):
+            # Generate continuous data between 0 and 100
+            data = np.random.rand(batch_size) * 100
+            col = ta.column(data)
+            # Define bucket borders
+            borders = [20, 40, 60, 80]
+            start_time = time.time()
+            # Bucketize the data
+            bucketized_col = functional.bucketize(col, borders)
+            # Hash the bucketized values
+            salt = 0
+            max_value = 100
+            hashed_col = functional.sigrid_hash(
+                bucketized_col, salt=salt, max_value=max_value
+            )
+            end_time = time.time()
+            times.append((end_time - start_time) * 1000)  # Convert to milliseconds
+        avg_time = sum(times) / rounds
+        continuous_times.append(avg_time)
+        print(
+            f"Continuous (Bucketize + Hash) - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+        )
+    fig = go.Figure(
+        data=go.Scatter(x=batch_sizes, y=continuous_times, mode="lines+markers")
+    )
+    fig.update_layout(
+        title="Average Processing Time vs Batch Size for Continuous Data (Bucketize + Hash)",
+        xaxis_title="Batch Size",
+        yaxis_title="Average Processing Time (milliseconds)",
+    )
+    fig.write_image("continuous_performance.png")
+
+
 batch_sizes = [1000, 10000, 100000, 500000, 1000000]
-test_sigrid_hash(batch_sizes, rounds=5)
-test_bucketize(batch_sizes, rounds=5)
-test_log(batch_sizes, rounds=5)
+test_sigrid_hash(batch_sizes, rounds=50)
+test_bucketize(batch_sizes, rounds=50)
+test_log(batch_sizes, rounds=50)
+test_continuous(batch_sizes, rounds=50)
