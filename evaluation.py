@@ -74,14 +74,16 @@ def test_continuous(batch_sizes, rounds=5):
     for batch_size in batch_sizes:
         times = []
         for _ in range(rounds):
-            # Generate continuous integer data between 1 and 100
-            data = np.random.randint(1, 101, size=batch_size)
-            col = ta.column(data)
+            # Generate continuous integer data between 1 and 100 as int64
+            data = np.random.randint(1, 101, size=batch_size, dtype=np.int64)
+            col = ta.column(data, dtype=dt.int64)
             # Define bucket borders as integers
             borders = [20, 40, 60, 80]
             start_time = time.time()
             # Bucketize the data
             bucketized_col = functional.bucketize(col, borders)
+            # Cast bucketized_col to int64
+            bucketized_col = bucketized_col.cast(dt.int64)
             # Hash the bucketized values
             salt = 0
             max_value = 100
