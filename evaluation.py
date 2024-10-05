@@ -74,12 +74,11 @@ def test_continuous(batch_sizes, rounds=5):
     for batch_size in batch_sizes:
         times = []
         for _ in range(rounds):
-            # Generate continuous data between 0 and 100 as float32
-            data = (np.random.rand(batch_size) * 100).astype(np.float32)
-            col = ta.column(data, dtype=ta.float32)
-            # Define bucket borders as float32
-            borders = [20.0, 40.0, 60.0, 80.0]
-            borders = [np.float32(b) for b in borders]
+            # Generate continuous integer data between 1 and 100
+            data = np.random.randint(1, 101, size=batch_size)
+            col = ta.column(data)
+            # Define bucket borders as integers
+            borders = [20, 40, 60, 80]
             start_time = time.time()
             # Bucketize the data
             bucketized_col = functional.bucketize(col, borders)
