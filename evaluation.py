@@ -1,8 +1,10 @@
 import torcharrow as ta
 from torcharrow import functional
 import time
+import torcharrow.dtypes as dt
 import numpy as np
 import plotly.graph_objects as go
+
 
 def test_sigrid_hash(batch_sizes, rounds=5):
     sigrid_times = []
@@ -19,12 +21,19 @@ def test_sigrid_hash(batch_sizes, rounds=5):
             times.append((end_time - start_time) * 1000)  # Convert to milliseconds
         avg_time = sum(times) / rounds
         sigrid_times.append(avg_time)
-        print(f"sigrid_hash - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds")
-    fig = go.Figure(data=go.Scatter(x=batch_sizes, y=sigrid_times, mode='lines+markers'))
-    fig.update_layout(title='Average Processing Time vs Batch Size for sigrid_hash',
-                      xaxis_title='Batch Size',
-                      yaxis_title='Average Processing Time (milliseconds)')
-    fig.write_image('sigrid_hash_performance.png')
+        print(
+            f"sigrid_hash - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+        )
+    fig = go.Figure(
+        data=go.Scatter(x=batch_sizes, y=sigrid_times, mode="lines+markers")
+    )
+    fig.update_layout(
+        title="Average Processing Time vs Batch Size for sigrid_hash",
+        xaxis_title="Batch Size",
+        yaxis_title="Average Processing Time (milliseconds)",
+    )
+    fig.write_image("sigrid_hash_performance.png")
+
 
 def test_bucketize(batch_sizes, rounds=5):
     bucketize_times = []
@@ -41,12 +50,19 @@ def test_bucketize(batch_sizes, rounds=5):
             times.append((end_time - start_time) * 1000)  # Convert to milliseconds
         avg_time = sum(times) / rounds
         bucketize_times.append(avg_time)
-        print(f"bucketize - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds")
-    fig = go.Figure(data=go.Scatter(x=batch_sizes, y=bucketize_times, mode='lines+markers'))
-    fig.update_layout(title='Average Processing Time vs Batch Size for bucketize',
-                      xaxis_title='Batch Size',
-                      yaxis_title='Average Processing Time (milliseconds)')
-    fig.write_image('bucketize_performance.png')
+        print(
+            f"bucketize - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+        )
+    fig = go.Figure(
+        data=go.Scatter(x=batch_sizes, y=bucketize_times, mode="lines+markers")
+    )
+    fig.update_layout(
+        title="Average Processing Time vs Batch Size for bucketize",
+        xaxis_title="Batch Size",
+        yaxis_title="Average Processing Time (milliseconds)",
+    )
+    fig.write_image("bucketize_performance.png")
+
 
 def test_log(batch_sizes, rounds=5):
     log_times = []
@@ -61,12 +77,16 @@ def test_log(batch_sizes, rounds=5):
             times.append((end_time - start_time) * 1000)  # Convert to milliseconds
         avg_time = sum(times) / rounds
         log_times.append(avg_time)
-        print(f"log - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds")
-    fig = go.Figure(data=go.Scatter(x=batch_sizes, y=log_times, mode='lines+markers'))
-    fig.update_layout(title='Average Processing Time vs Batch Size for log',
-                      xaxis_title='Batch Size',
-                      yaxis_title='Average Processing Time (milliseconds)')
-    fig.write_image('log_performance.png')
+        print(
+            f"log - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+        )
+    fig = go.Figure(data=go.Scatter(x=batch_sizes, y=log_times, mode="lines+markers"))
+    fig.update_layout(
+        title="Average Processing Time vs Batch Size for log",
+        xaxis_title="Batch Size",
+        yaxis_title="Average Processing Time (milliseconds)",
+    )
+    fig.write_image("log_performance.png")
 
 
 def test_continuous(batch_sizes, rounds=5):
