@@ -74,11 +74,12 @@ def test_continuous(batch_sizes, rounds=5):
     for batch_size in batch_sizes:
         times = []
         for _ in range(rounds):
-            # Generate continuous data between 0 and 100
-            data = np.random.rand(batch_size) * 100
-            col = ta.column(data)
-            # Define bucket borders
-            borders = [20, 40, 60, 80]
+            # Generate continuous data between 0 and 100 as float32
+            data = (np.random.rand(batch_size) * 100).astype(np.float32)
+            col = ta.column(data, dtype=ta.float32)
+            # Define bucket borders as float32
+            borders = [20.0, 40.0, 60.0, 80.0]
+            borders = [np.float32(b) for b in borders]
             start_time = time.time()
             # Bucketize the data
             bucketized_col = functional.bucketize(col, borders)
@@ -107,7 +108,7 @@ def test_continuous(batch_sizes, rounds=5):
 
 
 batch_sizes = [1000, 10000, 100000, 500000, 1000000]
-test_sigrid_hash(batch_sizes, rounds=50)
-test_bucketize(batch_sizes, rounds=50)
-test_log(batch_sizes, rounds=50)
+# test_sigrid_hash(batch_sizes, rounds=50)
+# test_bucketize(batch_sizes, rounds=50)
+# test_log(batch_sizes, rounds=50)
 test_continuous(batch_sizes, rounds=50)
