@@ -6,130 +6,159 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-def test_sigrid_hash(batch_sizes, rounds=5):
-    sigrid_times = []
-    for batch_size in batch_sizes:
-        times = []
-        for _ in range(rounds):
-            data = np.random.randint(1, 1000000, size=batch_size)
-            col = ta.column(data)
-            salt = 0  # As in the example
-            max_value = 100  # As in the example
-            start_time = time.time()
-            hashed_col = functional.sigrid_hash(col, salt=salt, max_value=max_value)
-            end_time = time.time()
-            times.append((end_time - start_time) * 1000)  # Convert to milliseconds
-        avg_time = sum(times) / rounds
-        sigrid_times.append(avg_time)
-        print(
-            f"sigrid_hash - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+def compute_batch_size(total_embedding_lookups, num_embeddings, lookups_per_embedding):
+    return total_embedding_lookups // (num_embeddings * lookups_per_embedding)
+
+
+def generate_synthetic_batch(
+    batch_size, num_embeddings, lookups_per_embedding, data_type="int"
+):
+    data = []
+    for _ in range(batch_size):
+        sample = []
+        for _ in range(num_embeddings):
+            if data_type == "int":
+                lookups = np.random.randint(1, 1000000, size=lookups_per_embedding)
+            elif data_type == "float":
+                lookups = np.random.rand(lookups_per_embedding) * 100 + 1
+            else:
+                raise ValueError("Unsupported data type")
+            sample.extend(lookups)
+        data.append(sample)
+    flat_data = [item for sublist in data for item in sublist]
+    col = ta.column(flat_data)
+    return col
+
+
+def test_sigrid_hash(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=5
+):
+    batch_size = compute_batch_size(
+        total_embedding_lookups, num_embeddings, lookups_per_embedding
+    )
+    times = []
+    for _ in range(rounds):
+        col = generate_synthetic_batch(
+            batch_size, num_embeddings, lookups_per_embedding, data_type="int"
         )
-    fig = go.Figure(
-        data=go.Scatter(x=batch_sizes, y=sigrid_times, mode="lines+markers")
+        salt = 0
+        max_value = 100
+        start_time = time.time()
+        hashed_col = functional.sigrid_hash(col, salt=salt, max_value=max_value)
+        end_time = time.time()
+        times.append((end_time - start_time) * 1000)
+    avg_time = sum(times) / rounds
+    print(
+        f"sigrid_hash - Batch size: {batch_size}, Embeddings: {num_embeddings}, "
+        f"Lookups per Embedding: {lookups_per_embedding}, "
+        f"Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
     )
-    fig.update_layout(
-        title="Average Processing Time vs Batch Size for sigrid_hash",
-        xaxis_title="Batch Size",
-        yaxis_title="Average Processing Time (milliseconds)",
-    )
-    fig.write_image("sigrid_hash_performance.png")
 
 
-def test_bucketize(batch_sizes, rounds=5):
-    bucketize_times = []
-    for batch_size in batch_sizes:
-        times = []
-        for _ in range(rounds):
-            # Generate data similar to the example: values between 1 and 11
-            data = np.random.randint(1, 12, size=batch_size)
-            col = ta.column(data)
-            borders = [2, 5, 10]  # As in the example
-            start_time = time.time()
-            bucketized_col = functional.bucketize(col, borders)
-            end_time = time.time()
-            times.append((end_time - start_time) * 1000)  # Convert to milliseconds
-        avg_time = sum(times) / rounds
-        bucketize_times.append(avg_time)
-        print(
-            f"bucketize - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+def test_bucketize(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=5
+):
+    batch_size = compute_batch_size(
+        total_embedding_lookups, num_embeddings, lookups_per_embedding
+    )
+    times = []
+    for _ in range(rounds):
+        col = generate_synthetic_batch(
+            batch_size, num_embeddings, lookups_per_embedding, data_type="int"
         )
-    fig = go.Figure(
-        data=go.Scatter(x=batch_sizes, y=bucketize_times, mode="lines+markers")
+        borders = [2, 5, 10]
+        start_time = time.time()
+        bucketized_col = functional.bucketize(col, borders)
+        end_time = time.time()
+        times.append((end_time - start_time) * 1000)
+    avg_time = sum(times) / rounds
+    print(
+        f"bucketize - Batch size: {batch_size}, Embeddings: {num_embeddings}, "
+        f"Lookups per Embedding: {lookups_per_embedding}, "
+        f"Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
     )
-    fig.update_layout(
-        title="Average Processing Time vs Batch Size for bucketize",
-        xaxis_title="Batch Size",
-        yaxis_title="Average Processing Time (milliseconds)",
-    )
-    fig.write_image("bucketize_performance.png")
 
 
-def test_log(batch_sizes, rounds=5):
-    log_times = []
-    for batch_size in batch_sizes:
-        times = []
-        for _ in range(rounds):
-            data = np.random.rand(batch_size) * 100 + 1  # Ensure data is positive
-            col = ta.column(data)
-            start_time = time.time()
-            log_col = col.log()
-            end_time = time.time()
-            times.append((end_time - start_time) * 1000)  # Convert to milliseconds
-        avg_time = sum(times) / rounds
-        log_times.append(avg_time)
-        print(
-            f"log - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+def test_log(total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=5):
+    batch_size = compute_batch_size(
+        total_embedding_lookups, num_embeddings, lookups_per_embedding
+    )
+    times = []
+    for _ in range(rounds):
+        col = generate_synthetic_batch(
+            batch_size, num_embeddings, lookups_per_embedding, data_type="float"
         )
-    fig = go.Figure(data=go.Scatter(x=batch_sizes, y=log_times, mode="lines+markers"))
-    fig.update_layout(
-        title="Average Processing Time vs Batch Size for log",
-        xaxis_title="Batch Size",
-        yaxis_title="Average Processing Time (milliseconds)",
+        start_time = time.time()
+        log_col = col.log()
+        end_time = time.time()
+        times.append((end_time - start_time) * 1000)
+    avg_time = sum(times) / rounds
+    print(
+        f"log - Batch size: {batch_size}, Embeddings: {num_embeddings}, "
+        f"Lookups per Embedding: {lookups_per_embedding}, "
+        f"Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
     )
-    fig.write_image("log_performance.png")
 
 
-def test_continuous(batch_sizes, rounds=5):
-    continuous_times = []
-    for batch_size in batch_sizes:
-        times = []
-        for _ in range(rounds):
-            # Generate continuous integer data between 1 and 100 as int64
-            data = np.random.randint(1, 101, size=batch_size, dtype=np.int64)
-            col = ta.column(data, dtype=dt.int64)
-            # Define bucket borders as integers
-            borders = [20, 40, 60, 80]
-            start_time = time.time()
-            # Bucketize the data
-            bucketized_col = functional.bucketize(col, borders)
-            # Cast bucketized_col to int64
-            bucketized_col = bucketized_col.cast(dt.int64)
-            # Hash the bucketized values
-            salt = 0
-            max_value = 100
-            hashed_col = functional.sigrid_hash(
-                bucketized_col, salt=salt, max_value=max_value
-            )
-            end_time = time.time()
-            times.append((end_time - start_time) * 1000)  # Convert to milliseconds
-        avg_time = sum(times) / rounds
-        continuous_times.append(avg_time)
-        print(
-            f"Continuous (Bucketize + Hash) - Batch size: {batch_size}, Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
+def test_continuous(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=5
+):
+    batch_size = compute_batch_size(
+        total_embedding_lookups, num_embeddings, lookups_per_embedding
+    )
+    times = []
+    for _ in range(rounds):
+        col = generate_synthetic_batch(
+            batch_size, num_embeddings, lookups_per_embedding, data_type="int"
         )
-    fig = go.Figure(
-        data=go.Scatter(x=batch_sizes, y=continuous_times, mode="lines+markers")
+        col = col.cast(dt.int64)
+        borders = [20, 40, 60, 80]
+        start_time = time.time()
+        bucketized_col = functional.bucketize(col, borders)
+        bucketized_col = bucketized_col.cast(dt.int64)
+        salt = 0
+        max_value = 100
+        hashed_col = functional.sigrid_hash(
+            bucketized_col, salt=salt, max_value=max_value
+        )
+        end_time = time.time()
+        times.append((end_time - start_time) * 1000)
+    avg_time = sum(times) / rounds
+    print(
+        f"Continuous (Bucketize + Hash) - Batch size: {batch_size}, Embeddings: {num_embeddings}, "
+        f"Lookups per Embedding: {lookups_per_embedding}, "
+        f"Average Time over {rounds} runs: {avg_time:.3f} milliseconds"
     )
-    fig.update_layout(
-        title="Average Processing Time vs Batch Size for Continuous Data (Bucketize + Hash)",
-        xaxis_title="Batch Size",
-        yaxis_title="Average Processing Time (milliseconds)",
-    )
-    fig.write_image("continuous_performance.png")
 
 
-batch_sizes = [1000, 10000, 100000, 500000, 1000000]
-# test_sigrid_hash(batch_sizes, rounds=50)
-# test_bucketize(batch_sizes, rounds=50)
-# test_log(batch_sizes, rounds=50)
-test_continuous(batch_sizes, rounds=50)
+total_embedding_lookups = 1_000_000
+
+num_embeddings = 50
+
+# Test Case 1: One-Hot Encoding (Lookups per Embedding = 1)
+lookups_per_embedding = 1
+print("Testing with One-Hot Encoding")
+test_sigrid_hash(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
+test_bucketize(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
+test_log(total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50)
+test_continuous(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
+
+# Test Case 2: Multi-Hot Encoding (Lookups per Embedding = 80)
+lookups_per_embedding = 80
+print("\nTesting with Multi-Hot Encoding")
+test_sigrid_hash(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
+test_bucketize(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
+test_log(total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50)
+test_continuous(
+    total_embedding_lookups, num_embeddings, lookups_per_embedding, rounds=50
+)
